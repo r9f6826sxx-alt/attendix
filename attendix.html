@@ -1,49 +1,52 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>Rénora</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #ffffff;
-      margin: 0;
-      padding: 20px;
-    }
+<title>Rénora</title>
 
-    h1 {
-      color: #F4A7B9;
-    }
+<style>
+body {
+  font-family: Arial;
+  background: #ffffff;
+  padding: 20px;
+}
 
-    .card {
-      background: #F5EDE6;
-      padding: 15px;
-      margin: 10px 0;
-      border-radius: 12px;
-    }
+h1 {
+  color: #F4A7B9;
+}
 
-    input {
-      padding: 8px;
-      margin: 5px;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-    }
+.card {
+  background: #F5EDE6;
+  padding: 15px;
+  border-radius: 12px;
+  margin: 10px 0;
+}
 
-    button {
-      padding: 10px 15px;
-      background: #F4A7B9;
-      border: none;
-      border-radius: 10px;
-      color: white;
-      cursor: pointer;
-    }
+input {
+  padding: 8px;
+  margin: 5px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
 
-    .percentage {
-      font-size: 20px;
-      font-weight: bold;
-      color: #F4A7B9;
-    }
-  </style>
+button {
+  padding: 8px 12px;
+  margin: 5px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+}
+
+.add { background: #F4A7B9; color: white; }
+.present { background: #4CAF50; color: white; }
+.absent { background: #f44336; color: white; }
+
+.result {
+  font-size: 22px;
+  color: #F4A7B9;
+  font-weight: bold;
+}
+</style>
+
 </head>
 
 <body>
@@ -51,81 +54,84 @@
 <h1>Rénora 💅</h1>
 
 <div class="card">
-  <h3>Add Subject</h3>
-  <input type="text" id="subject" placeholder="Subject">
-  <input type="number" id="attended" placeholder="Attended">
-  <input type="number" id="total" placeholder="Total">
-  <button onclick="addSubject()">Add</button>
+  <h3>Enter Your Current Attendance</h3>
+  <input id="baseA" placeholder="Attended so far">
+  <input id="baseT" placeholder="Total so far">
+  <button class="add" onclick="setInitial()">Set</button>
 </div>
 
-<div id="subjects"></div>
+<div class="card">
+  <h3>Add Class / Lab</h3>
+  <input id="name" placeholder="Subject name">
+  <input id="hours" type="number" placeholder="Hours (1/2/3)">
+  <button class="add" onclick="addClass()">Add</button>
+</div>
+
+<div id="schedule"></div>
 
 <div class="card">
   <h3>Overall Attendance</h3>
-  <p class="percentage" id="overall">0%</p>
-</div>
-
-<div class="card">
-  <h3>Prediction</h3>
-  <input type="number" id="future" placeholder="Future Classes">
-  <button onclick="predict()">Check</button>
-  <p id="predictionResult"></p>
+  <p id="result" class="result">0%</p>
 </div>
 
 <script>
-let subjects = [];
 
-function addSubject() {
-  let name = document.getElementById("subject").value;
-  let attended = parseInt(document.getElementById("attended").value);
-  let total = parseInt(document.getElementById("total").value);
+let baseAttended = 0;
+let baseTotal = 0;
 
-  subjects.push({name, attended, total});
+let extraAttended = 0;
+let extraTotal = 0;
+
+let classes = [];
+
+function setInitial() {
+  baseAttended = parseInt(document.getElementById("baseA").value);
+  baseTotal = parseInt(document.getElementById("baseT").value);
+  update();
+}
+
+function addClass() {
+  let name = document.getElementById("name").value;
+  let hours = parseInt(document.getElementById("hours").value);
+
+  classes.push({name, hours});
   render();
 }
 
+function markPresent(index) {
+  extraAttended += classes[index].hours;
+  extraTotal += classes[index].hours;
+  update();
+}
+
+function markAbsent(index) {
+  extraTotal += classes[index].hours;
+  update();
+}
+
+function update() {
+  let totalAtt = baseAttended + extraAttended;
+  let totalCls = baseTotal + extraTotal;
+
+  let percent = totalCls === 0 ? 0 : (totalAtt / totalCls) * 100;
+  document.getElementById("result").innerText = percent.toFixed(2) + "%";
+}
+
 function render() {
-  let container = document.getElementById("subjects");
+  let container = document.getElementById("schedule");
   container.innerHTML = "";
 
-  let totalAtt = 0;
-  let totalCls = 0;
-
-  subjects.forEach(sub => {
-    let percent = ((sub.attended / sub.total) * 100).toFixed(2);
-
-    totalAtt += sub.attended;
-    totalCls += sub.total;
-
+  classes.forEach((c, i) => {
     container.innerHTML += `
       <div class="card">
-        <b>${sub.name}</b><br>
-        ${sub.attended}/${sub.total} 
-        <span class="percentage">${percent}%</span>
+        <b>${c.name}</b> (${c.hours} hr)<br>
+        <button class="present" onclick="markPresent(${i})">Present</button>
+        <button class="absent" onclick="markAbsent(${i})">Absent</button>
       </div>
     `;
   });
-
-  let overall = ((totalAtt / totalCls) * 100).toFixed(2);
-  document.getElementById("overall").innerText = overall + "%";
 }
 
-function predict() {
-  let future = parseInt(document.getElementById("future").value);
-
-  let totalAtt = 0;
-  let totalCls = 0;
-
-  subjects.forEach(sub => {
-    totalAtt += sub.attended;
-    totalCls += sub.total;
-  });
-
-  let newPercent = ((totalAtt + future) / (totalCls + future) * 100).toFixed(2);
-
-  document.getElementById("predictionResult").innerText =
-    "New Attendance: " + newPercent + "%";
-}
 </script>
 
 </body>
