@@ -6,13 +6,11 @@
 <style>
 body {
   font-family: Arial;
-  background: #ffffff;
   padding: 20px;
+  background: white;
 }
 
-h1 {
-  color: #F4A7B9;
-}
+h1 { color: #F4A7B9; }
 
 .card {
   background: #F5EDE6;
@@ -21,29 +19,26 @@ h1 {
   margin: 10px 0;
 }
 
-input {
-  padding: 8px;
-  margin: 5px;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-}
-
 button {
   padding: 8px 12px;
   margin: 5px;
-  border-radius: 8px;
   border: none;
+  border-radius: 8px;
   cursor: pointer;
 }
 
+.present { background: green; color: white; }
+.absent { background: red; color: white; }
 .add { background: #F4A7B9; color: white; }
-.present { background: #4CAF50; color: white; }
-.absent { background: #f44336; color: white; }
+
+input, select {
+  padding: 8px;
+  margin: 5px;
+}
 
 .result {
   font-size: 22px;
   color: #F4A7B9;
-  font-weight: bold;
 }
 </style>
 
@@ -54,20 +49,34 @@ button {
 <h1>Rénora 💅</h1>
 
 <div class="card">
-  <h3>Enter Your Current Attendance</h3>
-  <input id="baseA" placeholder="Attended so far">
-  <input id="baseT" placeholder="Total so far">
-  <button class="add" onclick="setInitial()">Set</button>
+  <h3>Enter Current Attendance</h3>
+  <input id="baseA" placeholder="Attended">
+  <input id="baseT" placeholder="Total">
+  <button onclick="setInitial()">Set</button>
 </div>
 
 <div class="card">
-  <h3>Add Class / Lab</h3>
-  <input id="name" placeholder="Subject name">
+  <h3>Add to Timetable</h3>
+  
+  <select id="day">
+    <option value="1">Monday</option>
+    <option value="2">Tuesday</option>
+    <option value="3">Wednesday</option>
+    <option value="4">Thursday</option>
+    <option value="5">Friday</option>
+    <option value="6">Saturday</option>
+  </select>
+
+  <input id="subject" placeholder="Subject">
   <input id="hours" type="number" placeholder="Hours (1/2/3)">
+  
   <button class="add" onclick="addClass()">Add</button>
 </div>
 
-<div id="schedule"></div>
+<div class="card">
+  <h3>Today's Classes</h3>
+  <div id="today"></div>
+</div>
 
 <div class="card">
   <h3>Overall Attendance</h3>
@@ -76,61 +85,80 @@ button {
 
 <script>
 
-let baseAttended = 0;
-let baseTotal = 0;
-
-let extraAttended = 0;
-let extraTotal = 0;
-
-let classes = [];
+let timetable = {};
+let baseA = 0;
+let baseT = 0;
+let extraA = 0;
+let extraT = 0;
 
 function setInitial() {
-  baseAttended = parseInt(document.getElementById("baseA").value);
-  baseTotal = parseInt(document.getElementById("baseT").value);
+  baseA = parseInt(document.getElementById("baseA").value);
+  baseT = parseInt(document.getElementById("baseT").value);
   update();
 }
 
 function addClass() {
-  let name = document.getElementById("name").value;
+  let day = document.getElementById("day").value;
+  let subject = document.getElementById("subject").value;
   let hours = parseInt(document.getElementById("hours").value);
 
-  classes.push({name, hours});
-  render();
+  if (!timetable[day]) timetable[day] = [];
+
+  timetable[day].push([subject, hours]);
+  alert("Added!");
 }
 
-function markPresent(index) {
-  extraAttended += classes[index].hours;
-  extraTotal += classes[index].hours;
-  update();
-}
+function loadToday() {
+  let day = new Date().getDay();
 
-function markAbsent(index) {
-  extraTotal += classes[index].hours;
-  update();
-}
-
-function update() {
-  let totalAtt = baseAttended + extraAttended;
-  let totalCls = baseTotal + extraTotal;
-
-  let percent = totalCls === 0 ? 0 : (totalAtt / totalCls) * 100;
-  document.getElementById("result").innerText = percent.toFixed(2) + "%";
-}
-
-function render() {
-  let container = document.getElementById("schedule");
+  let todayList = timetable[day];
+  let container = document.getElementById("today");
   container.innerHTML = "";
 
-  classes.forEach((c, i) => {
+  if (!todayList || todayList.length === 0) {
+    container.innerHTML = "No classes";
+    return;
+  }
+
+  todayList.forEach((c, i) => {
     container.innerHTML += `
       <div class="card">
-        <b>${c.name}</b> (${c.hours} hr)<br>
+        ${c[0]}
+        <br>
         <button class="present" onclick="markPresent(${i})">Present</button>
         <button class="absent" onclick="markAbsent(${i})">Absent</button>
       </div>
     `;
   });
 }
+
+function markPresent(i) {
+  let day = new Date().getDay();
+  let hours = timetable[day][i][1];
+
+  extraA += hours;
+  extraT += hours;
+  update();
+}
+
+function markAbsent(i) {
+  let day = new Date().getDay();
+  let hours = timetable[day][i][1];
+
+  extraT += hours;
+  update();
+}
+
+function update() {
+  let totalA = baseA + extraA;
+  let totalT = baseT + extraT;
+
+  let percent = totalT === 0 ? 0 : (totalA / totalT) * 100;
+  document.getElementById("result").innerText = percent.toFixed(2) + "%";
+}
+
+// refresh today's schedule every time page opens
+window.onload = loadToday;
 
 </script>
 
