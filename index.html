@@ -21,21 +21,29 @@ h1 {
   margin: 10px 0;
 }
 
-button {
-  margin: 5px;
-  padding: 8px 12px;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-.present { background: #4CAF50; color: white; }
-.absent { background: #f44336; color: white; }
-.add { background: #F4A7B9; color: white; }
-
 input {
   padding: 8px;
   margin: 5px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+button {
+  padding: 8px 12px;
+  margin: 5px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+}
+
+.add { background: #F4A7B9; color: white; }
+.present { background: #4CAF50; color: white; }
+.absent { background: #f44336; color: white; }
+
+.result {
+  font-size: 22px;
+  color: #F4A7B9;
+  font-weight: bold;
 }
 </style>
 
@@ -46,8 +54,15 @@ input {
 <h1>Rénora 💅</h1>
 
 <div class="card">
-  <h3>Add Class</h3>
-  <input id="name" placeholder="Subject">
+  <h3>Enter Your Current Attendance</h3>
+  <input id="baseA" placeholder="Attended so far">
+  <input id="baseT" placeholder="Total so far">
+  <button class="add" onclick="setInitial()">Set</button>
+</div>
+
+<div class="card">
+  <h3>Add Class / Lab</h3>
+  <input id="name" placeholder="Subject name">
   <input id="hours" type="number" placeholder="Hours (1/2/3)">
   <button class="add" onclick="addClass()">Add</button>
 </div>
@@ -56,13 +71,24 @@ input {
 
 <div class="card">
   <h3>Overall Attendance</h3>
-  <p id="result">0%</p>
+  <p id="result" class="result">0%</p>
 </div>
 
 <script>
+
+let baseAttended = 0;
+let baseTotal = 0;
+
+let extraAttended = 0;
+let extraTotal = 0;
+
 let classes = [];
-let attended = 0;
-let total = 0;
+
+function setInitial() {
+  baseAttended = parseInt(document.getElementById("baseA").value);
+  baseTotal = parseInt(document.getElementById("baseT").value);
+  update();
+}
 
 function addClass() {
   let name = document.getElementById("name").value;
@@ -72,15 +98,23 @@ function addClass() {
   render();
 }
 
-function markPresent(i) {
-  attended += classes[i].hours;
-  total += classes[i].hours;
-  render();
+function markPresent(index) {
+  extraAttended += classes[index].hours;
+  extraTotal += classes[index].hours;
+  update();
 }
 
-function markAbsent(i) {
-  total += classes[i].hours;
-  render();
+function markAbsent(index) {
+  extraTotal += classes[index].hours;
+  update();
+}
+
+function update() {
+  let totalAtt = baseAttended + extraAttended;
+  let totalCls = baseTotal + extraTotal;
+
+  let percent = totalCls === 0 ? 0 : (totalAtt / totalCls) * 100;
+  document.getElementById("result").innerText = percent.toFixed(2) + "%";
 }
 
 function render() {
@@ -90,17 +124,14 @@ function render() {
   classes.forEach((c, i) => {
     container.innerHTML += `
       <div class="card">
-        ${c.name} (${c.hours} hr)
-        <br>
+        <b>${c.name}</b> (${c.hours} hr)<br>
         <button class="present" onclick="markPresent(${i})">Present</button>
         <button class="absent" onclick="markAbsent(${i})">Absent</button>
       </div>
     `;
   });
-
-  let percent = total === 0 ? 0 : (attended / total) * 100;
-  document.getElementById("result").innerText = percent.toFixed(2) + "%";
 }
+
 </script>
 
 </body>
