@@ -1,47 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Rénora</title>
-
-<style>
-body {
-  font-family: Arial;
-  padding: 20px;
-  background: white;
-}
-
-h1 { color: #F4A7B9; }
-
-.card {
-  background: #F5EDE6;
-  padding: 15px;
-  border-radius: 12px;
-  margin: 10px 0;
-}
-
-button {
-  padding: 8px 12px;
-  margin: 5px;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-.present { background: green; color: white; }
-.absent { background: red; color: white; }
-.add { background: #F4A7B9; color: white; }
-
-input, select {
-  padding: 8px;
-  margin: 5px;
-}
-
-.result {
-  font-size: 22px;
-  color: #F4A7B9;
-}
-</style>
-
+  <title>Rénora</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
@@ -57,7 +18,7 @@ input, select {
 
 <div class="card">
   <h3>Add to Timetable</h3>
-  
+
   <select id="day">
     <option value="1">Monday</option>
     <option value="2">Tuesday</option>
@@ -68,9 +29,8 @@ input, select {
   </select>
 
   <input id="subject" placeholder="Subject">
-  <input id="hours" type="number" placeholder="Hours (1/2/3)">
-  
-  <button class="add" onclick="addClass()">Add</button>
+  <input id="hours" placeholder="Hours (1/2/3)">
+  <button onclick="addClass()">Add</button>
 </div>
 
 <div class="card">
@@ -80,87 +40,10 @@ input, select {
 
 <div class="card">
   <h3>Overall Attendance</h3>
-  <p id="result" class="result">0%</p>
+  <p id="result">0%</p>
 </div>
 
-<script>
-
-let timetable = {};
-let baseA = 0;
-let baseT = 0;
-let extraA = 0;
-let extraT = 0;
-
-function setInitial() {
-  baseA = parseInt(document.getElementById("baseA").value);
-  baseT = parseInt(document.getElementById("baseT").value);
-  update();
-}
-
-function addClass() {
-  let day = document.getElementById("day").value;
-  let subject = document.getElementById("subject").value;
-  let hours = parseInt(document.getElementById("hours").value);
-
-  if (!timetable[day]) timetable[day] = [];
-
-  timetable[day].push([subject, hours]);
-  alert("Added!");
-}
-
-function loadToday() {
-  let day = new Date().getDay();
-
-  let todayList = timetable[day];
-  let container = document.getElementById("today");
-  container.innerHTML = "";
-
-  if (!todayList || todayList.length === 0) {
-    container.innerHTML = "No classes";
-    return;
-  }
-
-  todayList.forEach((c, i) => {
-    container.innerHTML += `
-      <div class="card">
-        ${c[0]}
-        <br>
-        <button class="present" onclick="markPresent(${i})">Present</button>
-        <button class="absent" onclick="markAbsent(${i})">Absent</button>
-      </div>
-    `;
-  });
-}
-
-function markPresent(i) {
-  let day = new Date().getDay();
-  let hours = timetable[day][i][1];
-
-  extraA += hours;
-  extraT += hours;
-  update();
-}
-
-function markAbsent(i) {
-  let day = new Date().getDay();
-  let hours = timetable[day][i][1];
-
-  extraT += hours;
-  update();
-}
-
-function update() {
-  let totalA = baseA + extraA;
-  let totalT = baseT + extraT;
-
-  let percent = totalT === 0 ? 0 : (totalA / totalT) * 100;
-  document.getElementById("result").innerText = percent.toFixed(2) + "%";
-}
-
-// refresh today's schedule every time page opens
-window.onload = loadToday;
-
-</script>
+<script src="script.js"></script>
 
 </body>
 </html>
